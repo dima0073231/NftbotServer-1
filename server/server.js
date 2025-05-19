@@ -9,7 +9,6 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
 app.use(express.static(path.join(__dirname, "public")));
 
 connectDB();
@@ -34,7 +33,7 @@ app.get("/api/users", async (req, res) => {
   }
 });
 
-app.get("*", (req, res) => {
+app.get("/api/users", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
