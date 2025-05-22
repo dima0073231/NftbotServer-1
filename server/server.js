@@ -142,7 +142,31 @@ app.post("/api/promocode/activate", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+app.post("/api/promocode", async (req, res) => {
+  try {
+    const { code, reward, isActive } = req.body;
 
+    if (!code || typeof reward !== "number") {
+      return res.status(400).json({ error: "Потрібно передати code і reward" });
+    }
+
+    const existing = await Promo.findOne({ code: code.toUpperCase() });
+    if (existing) {
+      return res.status(400).json({ error: "Такий промокод вже існує" });
+    }
+
+    const promo = new Promo({
+      code: code.toUpperCase(),
+      reward,
+      isActive: isActive ?? true,
+    });
+
+    await promo.save();
+    res.status(201).json(promo);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "index.html"));
 });
