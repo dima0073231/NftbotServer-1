@@ -38,31 +38,29 @@ app.patch("/api/users/:telegramId/inventory", async (req, res) => {
     const telegramId = Number(req.params.telegramId);
     const { itemId, count } = req.body;
 
-    if (!itemId || typeof count !== "number") {
-      return res.status(400).json({ error: "itemId і count обов'язкові" });
+    if (!itemId || !count || count <= 0) {
+      return res.status(400).json({ error: "Некорректные данные для обновления" });
     }
 
-    const user = await User.findOneAndUpdate({ telegramId }, updateData, {
-      new: true,
-    });
+    const user = await User.findOne({ telegramId });
     if (!user) {
-      return res.status(404).json({ error: "Користувача не знайдено" });
+      return res.status(404).json({ error: "Пользователь не найден" });
     }
 
-    const existingItem = user.inventory.find(
-      (item) => item.itemId.toString() === itemId
-    );
+    const inventoryItem = user.inventory.find(item => item.itemId.toString() === itemId);
 
-    if (existingItem) {
-      existingItem.count += count;
+    if (inventoryItem) {
+      inventoryItem.count += count;
     } else {
       user.inventory.push({ itemId, count });
     }
 
     await user.save();
-    res.json(user);
+
+    res.json({ inventory: user.inventory });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Ошибка сервера" });
   }
 });
 app.delete("/api/promocode/:code", async (req, res) => {
