@@ -42,7 +42,9 @@ app.patch("/api/users/:telegramId/inventory", async (req, res) => {
       return res.status(400).json({ error: "itemId і count обов'язкові" });
     }
 
-    const user = await User.findOne({ telegramId });
+    const user = await User.findOneAndUpdate({ telegramId }, updateData, {
+      new: true,
+    });
     if (!user) {
       return res.status(404).json({ error: "Користувача не знайдено" });
     }
