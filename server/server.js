@@ -2,9 +2,9 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 
-const connectDB = require("../db/db"); 
-const User = require("../models/user"); 
-const Promo = require("../models/promocode"); 
+const connectDB = require("../db/db");
+const User = require("../models/user");
+const Promo = require("../models/promocode");
 
 const app = express();
 
@@ -19,7 +19,9 @@ app.patch("/api/users/:telegramId", async (req, res) => {
     const telegramId = Number(req.params.telegramId);
     const updateData = req.body;
 
-    const user = await User.findOneAndUpdate({ telegramId }, updateData, { new: true });
+    const user = await User.findOneAndUpdate({ telegramId }, updateData, {
+      new: true,
+    });
 
     if (!user) {
       return res.status(404).json({ message: "Користувача не знайдено" });
@@ -61,7 +63,21 @@ app.patch("/api/users/:telegramId/inventory", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+app.delete("/api/promocode/:code", async (req, res) => {
+  try {
+    const code = req.params.code.toUpperCase();
 
+    const promo = await Promo.findOneAndDelete({ code });
+
+    if (!promo) {
+      return res.status(404).json({ error: "Промокод не знайдено" });
+    }
+
+    res.json({ message: `Промокод "${code}" успішно видалено` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 app.post("/api/users", async (req, res) => {
   try {
     const user = new User(req.body);
@@ -89,7 +105,8 @@ app.post("/api/promocode/activate", async (req, res) => {
     }
 
     const user = await User.findOne({ telegramId });
-    if (!user) return res.status(404).json({ error: "Користувача не знайдено" });
+    if (!user)
+      return res.status(404).json({ error: "Користувача не знайдено" });
 
     const upperCode = code.toUpperCase();
 
@@ -99,7 +116,9 @@ app.post("/api/promocode/activate", async (req, res) => {
 
     const promocode = await Promo.findOne({ code: upperCode, isActive: true });
     if (!promocode) {
-      return res.status(404).json({ error: "Промокод не знайдено або неактивний" });
+      return res
+        .status(404)
+        .json({ error: "Промокод не знайдено або неактивний" });
     }
 
     if (promocode.expiresAt && promocode.expiresAt < new Date()) {
