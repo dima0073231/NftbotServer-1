@@ -13,6 +13,22 @@ app.use(express.static(path.join(__dirname, "public")));
 
 connectDB();
 
+app.patch("/api/users/:telegramId", async (req, res) => {
+  try {
+    const telegramId = Number(req.params.telegramId);
+    const updateData = req.body;
+
+    const user = await User.findOneAndUpdate({ telegramId }, updateData, { new: true });
+
+    if (!user) {
+      return res.status(404).json({ message: "Користувача не знайдено" });
+    }
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.post("/api/users", async (req, res) => {
   try {
