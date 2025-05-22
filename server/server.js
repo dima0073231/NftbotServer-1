@@ -105,12 +105,16 @@ app.post("/api/promocode/activate", async (req, res) => {
     }
 
     const user = await User.findOne({ telegramId });
-    if (!user)
+    if (!user) {
       return res.status(404).json({ error: "Користувача не знайдено" });
+    }
 
     const upperCode = code.toUpperCase();
 
-    if (user.enteredPromocodes.includes(upperCode)) {
+    const alreadyUsed = user.enteredPromocodes.some(
+      (entry) => entry.code === upperCode
+    );
+    if (alreadyUsed) {
       return res.status(400).json({ error: "Промокод уже був використаний" });
     }
 
@@ -126,7 +130,7 @@ app.post("/api/promocode/activate", async (req, res) => {
     }
 
     user.balance += promocode.reward;
-    user.enteredPromocodes.push(upperCode);
+    user.enteredPromocodes.push({ code: upperCode });
 
     await user.save();
 
