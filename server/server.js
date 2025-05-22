@@ -29,7 +29,36 @@ app.patch("/api/users/:telegramId", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+app.patch("/api/users/:telegramId/inventory", async (req, res) => {
+  try {
+    const telegramId = Number(req.params.telegramId);
+    const { itemId, count } = req.body;
 
+    if (!itemId || typeof count !== "number") {
+      return res.status(400).json({ error: "itemId і count обов'язкові" });
+    }
+
+    const user = await User.findOne({ telegramId });
+    if (!user) {
+      return res.status(404).json({ error: "Користувача не знайдено" });
+    }
+
+    const existingItem = user.inventory.find(
+      (item) => item.itemId.toString() === itemId
+    );
+
+    if (existingItem) {
+      existingItem.count += count; // оновити кількість
+    } else {
+      user.inventory.push({ itemId, count }); // додати новий предмет
+    }
+
+    await user.save();
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 app.post("/api/users", async (req, res) => {
   try {
     const user = new User(req.body);
