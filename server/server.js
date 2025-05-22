@@ -32,14 +32,39 @@ app.patch("/api/users/:telegramId", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+app.patch("/api/users/:telegramId/balance", async (req, res) => {
+  try {
+    const telegramId = Number(req.params.telegramId);
+    const { balance } = req.body;
 
+    if (typeof balance !== "number") {
+      return res.status(400).json({ error: "Баланс має бути числом" });
+    }
+
+    const user = await User.findOneAndUpdate(
+      { telegramId },
+      { balance },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: "Користувача не знайдено" });
+    }
+
+    res.json({ message: "Баланс оновлено", balance: user.balance });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 app.patch("/api/users/:telegramId/inventory", async (req, res) => {
   try {
     const telegramId = Number(req.params.telegramId);
     const { itemId, count } = req.body;
 
     if (!itemId || !count || count <= 0) {
-      return res.status(400).json({ error: "Некорректные данные для обновления" });
+      return res
+        .status(400)
+        .json({ error: "Некорректные данные для обновления" });
     }
 
     const user = await User.findOne({ telegramId });
@@ -47,7 +72,9 @@ app.patch("/api/users/:telegramId/inventory", async (req, res) => {
       return res.status(404).json({ error: "Пользователь не найден" });
     }
 
-    const inventoryItem = user.inventory.find(item => item.itemId.toString() === itemId);
+    const inventoryItem = user.inventory.find(
+      (item) => item.itemId.toString() === itemId
+    );
 
     if (inventoryItem) {
       inventoryItem.count += count;
