@@ -4,6 +4,7 @@ const path = require("path");
 
 const connectDB = require("../db/db"); 
 const User = require("../models/user"); 
+const Promo = require("../models/promocode"); 
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.patch("/api/users/:telegramId", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 app.patch("/api/users/:telegramId/inventory", async (req, res) => {
   try {
     const telegramId = Number(req.params.telegramId);
@@ -48,9 +50,9 @@ app.patch("/api/users/:telegramId/inventory", async (req, res) => {
     );
 
     if (existingItem) {
-      existingItem.count += count; // оновити кількість
+      existingItem.count += count;
     } else {
-      user.inventory.push({ itemId, count }); // додати новий предмет
+      user.inventory.push({ itemId, count });
     }
 
     await user.save();
@@ -59,6 +61,7 @@ app.patch("/api/users/:telegramId/inventory", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 app.post("/api/users", async (req, res) => {
   try {
     const user = new User(req.body);
@@ -78,7 +81,46 @@ app.get("/api/users", async (req, res) => {
   }
 });
 
-app.get("/api/users", (req, res) => {
+app.post("/api/promocode/activate", async (req, res) => {
+  try {
+    const { telegramId, code } = req.body;
+    if (!telegramId || !code) {
+      return res.status(400).json({ error: "telegramId та code обов'язкові" });
+    }
+
+    const user = await User.findOne({ telegramId });
+    if (!user) return res.status(404).json({ error: "Користувача не знайдено" });
+
+    const upperCode = code.toUpperCase();
+
+    if (user.enteredPromocodes.includes(upperCode)) {
+      return res.status(400).json({ error: "Промокод уже був використаний" });
+    }
+
+    const promocode = await Promo.findOne({ code: upperCode, isActive: true });
+    if (!promocode) {
+      return res.status(404).json({ error: "Промокод не знайдено або неактивний" });
+    }
+
+    if (promocode.expiresAt && promocode.expiresAt < new Date()) {
+      return res.status(400).json({ error: "Промокод сплив" });
+    }
+
+    user.balance += promocode.reward;
+    user.enteredPromocodes.push(upperCode);
+
+    await user.save();
+
+    res.json({
+      message: `Промокод "${upperCode}" активовано! Баланс збільшено на ${promocode.reward}`,
+      balance: user.balance,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
