@@ -29,13 +29,13 @@ const userSchema = new Schema(
         result: { type: String, enum: ["win", "lose"], required: true },
       },
     ],
-
     inventory: [
       {
         itemId: { type: Schema.Types.ObjectId, ref: "Item" },
         count: { type: Number, default: 1 },
       },
     ],
+    enteredPromocodes: [{ type: String }], 
 
     language: { type: String, default: "ru", enum: ["ru", "en"] },
     lastActive: { type: Date, default: Date.now },
