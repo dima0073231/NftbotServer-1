@@ -142,6 +142,14 @@ app.post("/api/promocode/activate", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+app.get("/api/promocode", async (req, res) => {
+  try {
+    const promocodes = await Promo.find().sort({ createdAt: -1 });
+    res.json(promocodes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 app.post("/api/promocode", async (req, res) => {
   try {
     const { code, reward, isActive } = req.body;
