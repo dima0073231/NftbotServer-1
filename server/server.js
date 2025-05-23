@@ -73,7 +73,7 @@ app.get("/api/users/:telegramId/inventory", async (req, res) => {
 });
 app.patch("/api/users/:telegramId/inventory", async (req, res) => {
   try {
-    const telegramId = Number(req.params.telegramId);
+    const telegramId = req.params.telegramId;
     const { itemId, count } = req.body;
 
     if (!itemId || !count || count <= 0) {
