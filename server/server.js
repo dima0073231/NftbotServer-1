@@ -56,6 +56,21 @@ app.patch("/api/users/:telegramId/balance", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+app.get("/api/users/:telegramId/inventory", async (req, res) => {
+  try {
+    const telegramId = Number(req.params.telegramId);
+
+    const user = await User.findOne({ telegramId });
+    if (!user) {
+      return res.status(404).json({ error: "Пользователь не найден" });
+    }
+
+    res.json(user.inventory);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Ошибка сервера" });
+  }
+});
 app.patch("/api/users/:telegramId/inventory", async (req, res) => {
   try {
     const telegramId = Number(req.params.telegramId);
